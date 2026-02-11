@@ -93,28 +93,32 @@ export default function App() {
       if (!window.html2canvas) {
         await new Promise((resolve, reject) => {
            const script = document.createElement('script');
-           script.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
+           // Use reliable CDN
+           script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
            script.onload = resolve;
            script.onerror = reject;
            document.head.appendChild(script);
         });
       }
+      
       // Delay for render stability
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 500));
 
       const canvas = await window.html2canvas(cardRef.current, {
         backgroundColor: null, // Transparent background so border radius works
         scale: 3, 
-        useCORS: true,
-        allowTaint: true,
+        useCORS: true, // Enable Cross-Origin Resource Sharing
         logging: false,
+        allowTaint: false, // Important: Must be false to allow data URL export
       });
 
       const image = canvas.toDataURL("image/png");
       const link = document.createElement('a');
       link.href = image;
       link.download = `${template}-post-${Date.now()}.png`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
 
     } catch (err) {
       console.error("Save failed:", err);
@@ -130,7 +134,10 @@ export default function App() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
         <div className="max-w-4xl w-full">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">
+              Created by Muzzamil Mahmood and Saqib Zahid
+            </p>
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Choose a Template</h1>
             <p className="text-slate-500">Select a social media style to start creating your post</p>
           </div>
@@ -194,7 +201,7 @@ export default function App() {
             <div className="flex gap-4">
                <div className="flex flex-col gap-2 items-center">
                  <div className="w-16 h-16 relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-                   <img src={stats.avatar || defaultAvatar} className="w-full h-full rounded-full object-cover border-2 border-slate-200" alt="Avatar" />
+                   <img src={stats.avatar || defaultAvatar} className="w-full h-full rounded-full object-cover border-2 border-slate-200" alt="Avatar" crossOrigin="anonymous" />
                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                      <Upload size={16} className="text-white" />
                    </div>
@@ -277,7 +284,7 @@ export default function App() {
             disabled={isCapturing}
             className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-slate-200"
           >
-            {isCapturing ? 'Generating...' : <><Download size={18} /> Download Image</>}
+            {isCapturing ? 'Saving...' : <><Download size={18} /> Download Image</>}
           </button>
         </div>
       </div>
@@ -320,7 +327,7 @@ function TwitterCard({ stats, theme, defaultAvatar }) {
   return (
     <div className={`w-[500px] ${bg} ${text} p-4 font-sans`}>
       <div className="flex gap-3">
-        <img src={stats.avatar || defaultAvatar} className="w-10 h-10 rounded-full object-cover" />
+        <img src={stats.avatar || defaultAvatar} className="w-10 h-10 rounded-full object-cover" crossOrigin="anonymous" />
         <div className="flex-1">
           <div className="flex items-center gap-1">
             <span className="font-bold text-[15px]">{stats.name}</span>
@@ -332,7 +339,7 @@ function TwitterCard({ stats, theme, defaultAvatar }) {
           </div>
           {stats.postImage && (
             <div className={`mt-3 rounded-2xl overflow-hidden border ${border}`}>
-              <img src={stats.postImage} className="w-full h-auto object-cover" />
+              <img src={stats.postImage} className="w-full h-auto object-cover" crossOrigin="anonymous" />
             </div>
           )}
           
@@ -369,7 +376,7 @@ function LinkedInCard({ stats, theme, defaultAvatar }) {
   return (
     <div className={`w-[500px] ${bg} ${text} rounded-lg overflow-hidden font-sans border ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
       <div className="p-3 flex gap-3 mb-1">
-        <img src={stats.avatar || defaultAvatar} className="w-12 h-12 rounded-full object-cover" />
+        <img src={stats.avatar || defaultAvatar} className="w-12 h-12 rounded-full object-cover" crossOrigin="anonymous" />
         <div className="flex flex-col justify-center">
           <div className="flex items-center gap-1">
             <span className="font-semibold text-sm">{stats.name}</span>
@@ -388,7 +395,7 @@ function LinkedInCard({ stats, theme, defaultAvatar }) {
       </div>
 
       {stats.postImage && (
-        <img src={stats.postImage} className="w-full h-auto object-cover" />
+        <img src={stats.postImage} className="w-full h-auto object-cover" crossOrigin="anonymous" />
       )}
 
       <div className={`mx-3 py-2 flex items-center justify-between text-xs ${subtext} border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
@@ -424,7 +431,7 @@ function InstagramCard({ stats, theme, defaultAvatar }) {
     <div className={`w-[450px] ${bg} ${text} font-sans border ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
       <div className="p-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src={stats.avatar || defaultAvatar} className="w-8 h-8 rounded-full object-cover border border-gray-100/10" />
+          <img src={stats.avatar || defaultAvatar} className="w-8 h-8 rounded-full object-cover border border-gray-100/10" crossOrigin="anonymous" />
           <div className="flex flex-col leading-none">
             <div className="flex items-center gap-1">
               <span className="text-sm font-semibold">{stats.handle.replace('@','')}</span>
@@ -439,7 +446,7 @@ function InstagramCard({ stats, theme, defaultAvatar }) {
       {/* Insta Image is usually square or 4:5, but we allow auto height */}
       <div className="bg-gray-100 flex items-center justify-center overflow-hidden min-h-[300px]">
         {stats.postImage ? (
-           <img src={stats.postImage} className="w-full h-auto object-cover" />
+           <img src={stats.postImage} className="w-full h-auto object-cover" crossOrigin="anonymous" />
         ) : (
            <div className="text-gray-400 text-sm">No image selected</div>
         )}
