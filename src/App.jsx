@@ -90,10 +90,10 @@ export default function App() {
     setIsCapturing(true);
 
     try {
+      // 1. Ensure Library Loads
       if (!window.html2canvas) {
         await new Promise((resolve, reject) => {
            const script = document.createElement('script');
-           // Use reliable CDN
            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
            script.onload = resolve;
            script.onerror = reject;
@@ -101,24 +101,54 @@ export default function App() {
         });
       }
       
-      // Delay for render stability
+      // 2. Wait for stability
       await new Promise(r => setTimeout(r, 500));
 
-      const canvas = await window.html2canvas(cardRef.current, {
-        backgroundColor: null, // Transparent background so border radius works
-        scale: 3, 
-        useCORS: true, // Enable Cross-Origin Resource Sharing
-        logging: false,
-        allowTaint: false, // Important: Must be false to allow data URL export
+      // 3. Clone Node Strategy
+      // We clone the card and append it to the body to avoid scroll/overflow clipping issues
+      const element = cardRef.current;
+      const clone = element.cloneNode(true);
+      
+      // Style the clone to ensure it captures correctly off-screen
+      const rect = element.getBoundingClientRect();
+      Object.assign(clone.style, {
+        position: 'fixed',
+        top: '-10000px',
+        left: '-10000px',
+        zIndex: '-1000',
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        transform: 'none', // reset any transforms
+        margin: '0'
       });
+      
+      document.body.appendChild(clone);
 
-      const image = canvas.toDataURL("image/png");
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = `${template}-post-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        const canvas = await window.html2canvas(clone, {
+          backgroundColor: null,
+          scale: 3, 
+          useCORS: true,
+          logging: false,
+          allowTaint: false,
+          width: rect.width,
+          height: rect.height,
+          x: 0,
+          y: 0
+        });
+
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `${template}-post-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } finally {
+        if (document.body.contains(clone)) {
+          document.body.removeChild(clone);
+        }
+      }
 
     } catch (err) {
       console.error("Save failed:", err);
