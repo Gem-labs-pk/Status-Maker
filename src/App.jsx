@@ -1,62 +1,57 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  MessageCircle, 
-  Repeat, 
-  Heart, 
-  Share, 
+  ThumbsUp, 
+  MessageSquare, 
+  Share2, 
+  Send, 
   MoreHorizontal, 
-  BadgeCheck,
-  Bookmark,
-  RotateCcw,
-  Upload,
+  Globe,
+  Clock,
+  Briefcase,
   Image as ImageIcon,
   User,
   Type,
-  Clock,
-  Calendar,
-  Eye,
-  BarChart2,
-  Camera,
+  RotateCcw,
+  Download,
   Trash2,
+  Upload,
   Sun,
   Moon,
-  Sparkles,
-  Download,
-  Check
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 
 export default function App() {
   // --- STATE ---
   const [content, setContent] = useState('');
-  const [theme, setTheme] = useState('dark'); // 'dark' | 'light'
+  const [theme, setTheme] = useState('light'); // 'light' | 'dark'
   const [isCapturing, setIsCapturing] = useState(false);
   
   // Refs
   const avatarInputRef = useRef(null);
   const postImageInputRef = useRef(null);
-  const tweetCardRef = useRef(null);
+  const cardRef = useRef(null);
   
+  // Default Avatar (SVG Data URI to prevent CORS issues on save)
+  const defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E";
+
   // Stats & Identity
   const [stats, setStats] = useState({
-    name: 'Sarah Jenkins',
-    handle: '@sarah_j',
-    time: '',
-    date: '',
-    views: '2.4M',
-    reposts: '4.2K',
-    likes: '18.5K',
-    bookmarks: '1.2K',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&backgroundColor=b6e3f4',
-    badgeType: 'blue', // 'blue' | 'gold' | 'grey' | 'none'
+    name: 'Alex Morgan',
+    headline: 'Product Designer | UI/UX Enthusiast',
+    time: '2h',
+    isEdited: false,
+    likes: 845,
+    comments: 42,
+    shares: 15,
+    avatar: null, // If null, uses defaultAvatar
     postImage: null
   });
 
   // --- EFFECTS ---
 
-  // Initialize Time
   useEffect(() => {
-    resetTime();
-    // Preload html2canvas quietly
+    // Preload html2canvas
     if (!window.html2canvas) {
       const script = document.createElement('script');
       script.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
@@ -65,15 +60,6 @@ export default function App() {
   }, []);
 
   // --- ACTIONS ---
-
-  const resetTime = () => {
-    const now = new Date();
-    setStats(prev => ({
-      ...prev,
-      time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-      date: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    }));
-  };
 
   const updateStat = (key, value) => {
     setStats(prev => ({ ...prev, [key]: value }));
@@ -92,9 +78,8 @@ export default function App() {
     if(postImageInputRef.current) postImageInputRef.current.value = '';
   };
 
-  // Improved Save/Screenshot Logic
   const handleSave = async () => {
-    if (!tweetCardRef.current) return;
+    if (!cardRef.current) return;
     setIsCapturing(true);
 
     try {
@@ -109,13 +94,13 @@ export default function App() {
         });
       }
 
-      // Small delay to ensure styles settle
+      // Small delay for rendering
       await new Promise(r => setTimeout(r, 100));
 
-      const canvas = await window.html2canvas(tweetCardRef.current, {
-        backgroundColor: theme === 'dark' ? '#15202B' : '#ffffff', // Match new colors
-        scale: 3, // High Res
-        useCORS: true, 
+      const canvas = await window.html2canvas(cardRef.current, {
+        backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+        scale: 2, // Retain quality
+        useCORS: true,
         allowTaint: true,
         logging: false,
       });
@@ -123,12 +108,12 @@ export default function App() {
       const image = canvas.toDataURL("image/png");
       const link = document.createElement('a');
       link.href = image;
-      link.download = `status-${stats.handle.replace('@','')}-${Date.now()}.png`;
+      link.download = `professional-post-${Date.now()}.png`;
       link.click();
 
     } catch (err) {
       console.error("Save failed:", err);
-      alert("Could not save image. Note: External images without CORS headers may block saving.");
+      alert("Could not save image. Try uploading local images instead of using web URLs for avatars to fix security blocks.");
     } finally {
       setIsCapturing(false);
     }
@@ -136,330 +121,234 @@ export default function App() {
 
   // --- RENDER HELPERS ---
 
-  // Rich Text Parser for #hashtags and @mentions
   const renderRichText = (text) => {
     if (!text) return null;
-    const parts = text.split(/([\s\n]+)/);
-    return parts.map((part, i) => {
-      // Hashtags and Mentions
-      if (part.match(/^@[a-zA-Z0-9_]+/) || part.match(/^#[a-zA-Z0-9_]+/)) {
-        return <span key={i} className="text-[#1D9BF0]">{part}</span>;
+    return text.split(/([\s\n]+)/).map((part, i) => {
+      // Highlight hashtags and links
+      if (part.startsWith('#') || part.startsWith('http')) {
+        return <span key={i} className="text-blue-600 font-medium">{part}</span>;
       }
       return part;
     });
   };
 
-  // Badge Color Logic
-  const getBadgeColor = (type) => {
-    switch(type) {
-      case 'gold': return '#FFD700'; // Business
-      case 'grey': return '#829aab'; // Gov/Official
-      default: return '#1D9BF0';     // Standard Blue
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-800 font-sans flex flex-col md:flex-row overflow-hidden">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col md:flex-row overflow-hidden">
       
       {/* --- LEFT PANEL: CONTROL CENTER --- */}
-      <div className="w-full md:w-[440px] border-r border-slate-200 flex flex-col bg-white relative z-20 h-screen overflow-hidden shadow-xl">
+      <div className="w-full md:w-[400px] border-r border-slate-200 flex flex-col bg-white z-20 h-screen shadow-xl">
         
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
           <div className="flex items-center gap-2">
-             <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center">
+             <div className="bg-blue-600 p-1.5 rounded-lg">
                 <Sparkles size={16} className="text-white" />
              </div>
-             <span className="text-sm font-bold text-slate-800 tracking-wide">Status Maker</span>
+             <span className="text-sm font-bold text-slate-800 tracking-wide uppercase">Pro Post Maker</span>
           </div>
-          <button onClick={resetTime} className="text-[10px] text-slate-500 hover:text-slate-800 flex items-center gap-1.5 font-semibold uppercase tracking-wider transition-colors px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200">
-             <RotateCcw size={12} /> Reset
-          </button>
         </div>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 pb-32">
+        {/* Controls */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 pb-32">
           
-          {/* 1. Appearance (Theme) */}
-          <section className="space-y-3">
-             <SectionLabel icon={<Sun size={12} />} label="Theme Mode" />
-             <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
-                <ThemeButton 
-                  isActive={theme === 'dark'} 
-                  onClick={() => setTheme('dark')} 
-                  icon={<Moon size={14} />} 
-                  label="Dim (Pro)" 
-                />
-                <ThemeButton 
-                  isActive={theme === 'light'} 
-                  onClick={() => setTheme('light')} 
-                  icon={<Sun size={14} />} 
-                  label="Light" 
-                />
-             </div>
-          </section>
+          {/* Theme Toggle */}
+          <div className="bg-slate-100 p-1 rounded-lg flex">
+             <button 
+               onClick={() => setTheme('light')}
+               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold transition-all ${theme === 'light' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}
+             >
+               <Sun size={14} /> Light
+             </button>
+             <button 
+               onClick={() => setTheme('dark')}
+               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold transition-all ${theme === 'dark' ? 'bg-slate-800 shadow-sm text-white' : 'text-slate-500'}`}
+             >
+               <Moon size={14} /> Dark
+             </button>
+          </div>
 
           <Divider />
 
-          {/* 2. Main Content Input */}
-          <section className="space-y-3">
-            <SectionLabel icon={<Type size={12} />} label="Content" />
-            <div className="relative">
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="What is happening?!"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-base text-slate-800 placeholder-slate-400 outline-none resize-none font-medium leading-relaxed min-h-[140px] focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all"
-              />
-              <div className="absolute bottom-3 right-3 flex gap-2">
-                 {/* Image Controls */}
-                 <button 
-                  onClick={() => postImageInputRef.current?.click()}
-                  className="p-2 rounded-lg bg-white shadow-sm border border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-500 transition-colors"
-                  title="Attach Media"
-                 >
-                   <ImageIcon size={16} />
-                 </button>
-              </div>
-            </div>
-            
-            <input 
-              type="file" 
-              ref={postImageInputRef} 
-              onChange={(e) => handleImageUpload(e, 'postImage')} 
-              className="hidden" 
-              accept="image/*" 
-            />
-            
-            {/* Attachment Preview */}
-            {stats.postImage && (
-               <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-slate-200 overflow-hidden">
-                      <img src={stats.postImage} alt="Preview" className="w-full h-full object-cover opacity-80" />
-                    </div>
-                    <span className="text-xs text-slate-500 font-medium">Image attached</span>
-                  </div>
-                  <button 
-                    onClick={clearPostImage}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-               </div>
-            )}
-          </section>
-
-          <Divider />
-
-          {/* 3. Identity Configuration */}
+          {/* Author Info */}
           <section className="space-y-4">
-            <SectionLabel icon={<User size={12} />} label="Author Info" />
+            <SectionLabel icon={<User size={14} />} label="Author Profile" />
             
-            <div className="flex gap-4 items-start">
-               {/* Avatar Upload */}
+            <div className="flex gap-4">
+               {/* Avatar */}
                <div className="flex flex-col gap-2 items-center">
-                 <div className="relative group cursor-pointer w-16 h-16" onClick={() => avatarInputRef.current?.click()}>
-                   <img src={stats.avatar} alt="Profile" className="w-full h-full rounded-full object-cover border border-slate-200 group-hover:border-blue-400 transition-colors shadow-sm" />
-                   <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px]">
+                 <div className="w-16 h-16 relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+                   {stats.avatar ? (
+                     <img src={stats.avatar} className="w-full h-full rounded-full object-cover border-2 border-slate-200" alt="Avatar" />
+                   ) : (
+                     <div className="w-full h-full rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200">
+                       <User size={24} className="text-slate-400" />
+                     </div>
+                   )}
+                   <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                      <Upload size={16} className="text-white" />
                    </div>
                  </div>
-                 <input 
-                    type="file" 
-                    ref={avatarInputRef} 
-                    onChange={(e) => handleImageUpload(e, 'avatar')} 
-                    className="hidden" 
-                    accept="image/*" 
-                  />
+                 <input type="file" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} className="hidden" accept="image/*" />
                </div>
 
-               {/* Name & Handle */}
+               {/* Inputs */}
                <div className="flex-1 space-y-3">
-                 <InputGroup label="Display Name" value={stats.name} onChange={(v) => updateStat('name', v)} />
-                 <InputGroup label="Handle" value={stats.handle} onChange={(v) => updateStat('handle', v)} />
+                 <InputGroup placeholder="Full Name" value={stats.name} onChange={(v) => updateStat('name', v)} />
+                 <InputGroup placeholder="Headline (e.g. Product Manager)" value={stats.headline} onChange={(v) => updateStat('headline', v)} />
+                 <InputGroup placeholder="Time (e.g. 2h • Edited)" value={stats.time} onChange={(v) => updateStat('time', v)} icon={<Clock size={12}/>} />
                </div>
-            </div>
-
-            {/* Verification Badge Selector */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-              <label className="text-xs text-slate-400 font-bold uppercase tracking-wider">Verification Status</label>
-              
-              <div className="grid grid-cols-4 gap-2">
-                <BadgeSelector 
-                   type="none" 
-                   active={stats.badgeType === 'none'} 
-                   onClick={() => updateStat('badgeType', 'none')} 
-                />
-                <BadgeSelector 
-                   type="blue" 
-                   active={stats.badgeType === 'blue'} 
-                   onClick={() => updateStat('badgeType', 'blue')} 
-                />
-                <BadgeSelector 
-                   type="gold" 
-                   active={stats.badgeType === 'gold'} 
-                   onClick={() => updateStat('badgeType', 'gold')} 
-                />
-                <BadgeSelector 
-                   type="grey" 
-                   active={stats.badgeType === 'grey'} 
-                   onClick={() => updateStat('badgeType', 'grey')} 
-                />
-              </div>
             </div>
           </section>
 
           <Divider />
 
-          {/* 4. Metrics & Timestamp */}
-          <section className="space-y-4">
-             <SectionLabel icon={<BarChart2 size={12} />} label="Metrics" />
-             <div className="grid grid-cols-2 gap-3">
-               <InputGroup label="Views" value={stats.views} onChange={(v) => updateStat('views', v)} />
-               <InputGroup label="Likes" value={stats.likes} onChange={(v) => updateStat('likes', v)} />
-               <InputGroup label="Reposts" value={stats.reposts} onChange={(v) => updateStat('reposts', v)} />
-               <InputGroup label="Bookmarks" value={stats.bookmarks} onChange={(v) => updateStat('bookmarks', v)} />
-             </div>
+          {/* Content */}
+          <section className="space-y-3">
+             <SectionLabel icon={<Type size={14} />} label="Post Content" />
+             <textarea 
+               value={content}
+               onChange={(e) => setContent(e.target.value)}
+               placeholder="What do you want to talk about?"
+               className="w-full h-32 bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+             />
              
-             <div className="pt-2">
-               <SectionLabel icon={<Clock size={12} />} label="Date & Time" />
-               <div className="grid grid-cols-2 gap-3 mt-2">
-                 <InputGroup value={stats.time} onChange={(v) => updateStat('time', v)} icon={<Clock size={12} />} />
-                 <InputGroup value={stats.date} onChange={(v) => updateStat('date', v)} icon={<Calendar size={12} />} />
-               </div>
+             <div className="flex items-center gap-2">
+               <button 
+                 onClick={() => postImageInputRef.current?.click()}
+                 className="flex items-center gap-2 text-xs font-semibold bg-white border border-slate-200 hover:bg-slate-50 px-3 py-2 rounded-lg transition-colors text-slate-600"
+               >
+                 <ImageIcon size={14} />
+                 {stats.postImage ? 'Change Image' : 'Add Photo'}
+               </button>
+               {stats.postImage && (
+                 <button onClick={clearPostImage} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={14}/></button>
+               )}
              </div>
+             <input type="file" ref={postImageInputRef} onChange={(e) => handleImageUpload(e, 'postImage')} className="hidden" accept="image/*" />
           </section>
+
+          <Divider />
+
+          {/* Metrics */}
+          <section className="space-y-3">
+            <SectionLabel icon={<ThumbsUp size={14} />} label="Engagement" />
+            <div className="grid grid-cols-3 gap-3">
+               <InputGroup label="Likes" value={stats.likes} onChange={(v) => updateStat('likes', v)} />
+               <InputGroup label="Comments" value={stats.comments} onChange={(v) => updateStat('comments', v)} />
+               <InputGroup label="Reposts" value={stats.shares} onChange={(v) => updateStat('shares', v)} />
+            </div>
+          </section>
+
         </div>
 
-        {/* SAVE Button Sticky Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 z-30">
+        {/* Footer Actions */}
+        <div className="p-4 border-t border-slate-200 bg-white">
           <button 
             onClick={handleSave}
             disabled={isCapturing}
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 rounded-xl shadow-lg shadow-slate-200 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group"
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50"
           >
-            {isCapturing ? (
-              <span className="animate-pulse">Processing...</span>
-            ) : (
-              <>
-                <Download size={20} className="group-hover:translate-y-0.5 transition-transform" />
-                Save Image
-              </>
-            )}
+            {isCapturing ? 'Processing...' : <><Download size={18} /> Download Image</>}
           </button>
         </div>
+
       </div>
 
-      {/* --- RIGHT PANEL: PREVIEW CANVAS --- */}
-      <div className={`flex-1 flex items-center justify-center p-4 md:p-12 relative overflow-hidden transition-colors duration-500 ${theme === 'dark' ? 'bg-[#000000]' : 'bg-[#F0F2F5]'}`}>
+      {/* --- RIGHT PANEL: PREVIEW --- */}
+      <div className={`flex-1 overflow-y-auto flex items-center justify-center p-8 transition-colors ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'}`}>
         
-        {/* Modern Background Gradient - Very subtle */}
-        {theme === 'dark' && (
-           <div className="absolute inset-0 pointer-events-none opacity-20">
-              <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[#192734] to-transparent" />
-           </div>
-        )}
-
-        {/* --- THE POST CARD --- */}
+        {/* THE CARD */}
         <div 
-          ref={tweetCardRef}
-          className={`w-full max-w-[600px] rounded-none md:rounded-xl p-4 md:p-5 relative z-10 transition-all duration-300 shadow-xl ${
-             theme === 'dark' 
-                ? 'bg-[#15202B] border border-slate-800 text-white shadow-black/50' // Official "Dim" color
-                : 'bg-white border border-slate-100 text-black shadow-slate-200/50'
+          ref={cardRef}
+          className={`w-full max-w-[550px] rounded-xl shadow-sm border transition-all ${
+            theme === 'dark' 
+              ? 'bg-[#1e293b] border-slate-700 text-white' 
+              : 'bg-white border-slate-200 text-slate-900'
           }`}
         >
           
-          {/* Header */}
-          <div className="flex justify-between items-start mb-3">
-            <div className="flex gap-3">
-              <img 
-                src={stats.avatar} 
-                alt="Profile" 
-                crossOrigin="anonymous" 
-                className="w-10 h-10 rounded-full object-cover"
-              />
-              <div className="flex flex-col justify-center -space-y-0.5">
-                <div className="flex items-center gap-1 group">
-                  <span className={`font-bold text-[15px] ${theme === 'dark' ? 'text-white' : 'text-[#0F1419]'}`}>
-                    {stats.name}
-                  </span>
-                  {stats.badgeType !== 'none' && (
-                     <BadgeCheck 
-                        size={18} 
-                        fill={getBadgeColor(stats.badgeType)} 
-                        className="text-white" // This makes the checkmark white
-                        strokeWidth={2.5}
-                     />
-                  )}
+          {/* 1. Header */}
+          <div className="p-4 flex gap-3 items-start">
+            <img 
+              src={stats.avatar || defaultAvatar} 
+              alt="Profile"
+              crossOrigin="anonymous" 
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col">
+                <span className={`font-semibold text-sm truncate ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                  {stats.name}
+                </span>
+                <span className={`text-xs truncate ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {stats.headline}
+                </span>
+                <div className={`flex items-center gap-1 text-xs mt-0.5 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <span>{stats.time}</span>
+                  <span>•</span>
+                  <Globe size={10} />
                 </div>
-                <span className={`text-[15px] ${theme === 'dark' ? 'text-[#8B98A5]' : 'text-[#536471]'}`}>{stats.handle}</span>
               </div>
             </div>
-            <div className={`${theme === 'dark' ? 'text-[#8B98A5]' : 'text-[#536471]'}`}>
-               <MoreHorizontal size={20} />
+            <button className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              <MoreHorizontal size={20} />
+            </button>
+          </div>
+
+          {/* 2. Content */}
+          <div className="px-4 pb-2">
+            <div className={`text-sm whitespace-pre-wrap leading-relaxed ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+              {content ? renderRichText(content) : <span className="opacity-40 italic">Start typing your post...</span>}
             </div>
           </div>
 
-          {/* Body Content */}
-          <div className="mt-3 mb-3">
-            {/* Text Content */}
-            {(content || (!content && !stats.postImage)) && (
-               <p className={`text-[17px] leading-[24px] whitespace-pre-wrap font-normal break-words ${theme === 'dark' ? 'text-white' : 'text-[#0F1419]'} ${!content ? 'opacity-40 italic' : ''}`}>
-                 {content ? renderRichText(content) : "Type something..."}
-               </p>
-            )}
-            
-            {/* Image Attachment */}
-            {stats.postImage && (
-              <div className={`rounded-2xl overflow-hidden border mt-3 ${theme === 'dark' ? 'border-[#38444D]' : 'border-[#CFD9DE]'}`}>
-                <img 
-                  src={stats.postImage} 
-                  alt="Post" 
-                  crossOrigin="anonymous" 
-                  className="w-full h-auto max-h-[500px] object-cover block" 
-                />
-              </div>
-            )}
-          </div>
+          {/* 3. Image */}
+          {stats.postImage && (
+            <div className="mt-2">
+              <img 
+                src={stats.postImage} 
+                alt="Post Content" 
+                crossOrigin="anonymous"
+                className="w-full h-auto object-cover border-t border-b border-slate-100/10"
+              />
+            </div>
+          )}
 
-          {/* Metadata */}
-          <div className={`py-3 border-b ${theme === 'dark' ? 'border-[#38444D]' : 'border-[#EFF3F4]'}`}>
-             <div className={`flex items-center gap-1 text-[15px] ${theme === 'dark' ? 'text-[#8B98A5]' : 'text-[#536471]'}`}>
-                <span>{stats.time}</span>
-                <span>·</span>
-                <span>{stats.date}</span>
-                <span>·</span>
-                <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-[#0F1419]'}`}>{stats.views}</span>
-                <span>Views</span>
+          {/* 4. Social Proof Line */}
+          <div className={`mx-4 mt-3 py-2 flex items-center justify-between text-xs border-b ${theme === 'dark' ? 'border-slate-700 text-slate-400' : 'border-slate-100 text-slate-500'}`}>
+             <div className="flex items-center gap-1">
+                <div className="bg-blue-500 rounded-full p-0.5">
+                   <ThumbsUp size={8} className="text-white fill-white" />
+                </div>
+                <span>{stats.likes}</span>
+             </div>
+             <div className="flex gap-3">
+               <span>{stats.comments} comments</span>
+               <span>{stats.shares} reposts</span>
              </div>
           </div>
 
-          {/* Actions */}
-          <div className={`flex justify-between items-center px-2 pt-3 ${theme === 'dark' ? 'text-[#8B98A5]' : 'text-[#536471]'}`}>
-            <ActionIcon icon={<MessageCircle size={18} />} count="24" />
-            <ActionIcon icon={<Repeat size={18} />} count={stats.reposts} />
-            <ActionIcon icon={<Heart size={18} />} count={stats.likes} />
-            <ActionIcon icon={<Bookmark size={18} />} count={stats.bookmarks} />
-            <div className="transition-colors">
-              <Share size={18} />
-            </div>
+          {/* 5. Action Buttons */}
+          <div className="px-2 py-1 flex items-center justify-between">
+             <ActionButton icon={<ThumbsUp size={18} />} label="Like" theme={theme} />
+             <ActionButton icon={<MessageSquare size={18} />} label="Comment" theme={theme} />
+             <ActionButton icon={<RotateCcw size={18} />} label="Repost" theme={theme} />
+             <ActionButton icon={<Send size={18} />} label="Send" theme={theme} />
           </div>
 
         </div>
+
       </div>
     </div>
   );
 }
 
-// --- SUB COMPONENTS ---
+// --- COMPONENTS ---
 
 function SectionLabel({ icon, label }) {
   return (
     <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-      {icon}
-      <span>{label}</span>
+      {icon} <span>{label}</span>
     </div>
   );
 }
@@ -468,76 +357,33 @@ function Divider() {
   return <div className="h-px bg-slate-100 w-full" />;
 }
 
-function ThemeButton({ isActive, onClick, icon, label }) {
-  return (
-    <button 
-      onClick={onClick}
-      className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${
-        isActive 
-          ? 'bg-slate-800 text-white shadow-md' 
-          : 'bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-      }`}
-    >
-      {icon} {label}
-    </button>
-  );
-}
-
-function BadgeSelector({ type, active, onClick }) {
-  const getPreviewColor = () => {
-    switch(type) {
-      case 'gold': return '#FFD700';
-      case 'grey': return '#829aab';
-      case 'blue': return '#1D9BF0';
-      default: return '#cbd5e1';
-    }
-  };
-
-  return (
-    <button 
-      onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all ${
-        active 
-          ? 'bg-blue-50/50 border-blue-500/30 ring-1 ring-blue-500/20' 
-          : 'bg-white border-slate-200 hover:border-slate-300'
-      }`}
-    >
-      {type === 'none' ? (
-        <div className="w-5 h-5 rounded-full border-2 border-slate-300" />
-      ) : (
-        <BadgeCheck size={20} fill={getPreviewColor()} className="text-white" />
-      )}
-      <span className={`text-[10px] font-bold capitalize ${active ? 'text-blue-600' : 'text-slate-400'}`}>
-        {type}
-      </span>
-    </button>
-  );
-}
-
-function InputGroup({ label, value, onChange, icon }) {
+function InputGroup({ label, value, onChange, placeholder, icon }) {
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <label className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{label}</label>}
-      <div className="relative group">
+      {label && <label className="text-[10px] text-slate-500 font-bold uppercase">{label}</label>}
+      <div className="relative">
         <input 
           type="text" 
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={`w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:bg-white outline-none transition-all font-medium ${icon ? 'pl-8' : ''}`}
+          placeholder={placeholder}
+          className={`w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-1 focus:ring-blue-500 outline-none ${icon ? 'pl-8' : ''}`}
         />
-        {icon && <span className="absolute left-3 top-3 text-slate-400">{icon}</span>}
+        {icon && <span className="absolute left-2.5 top-2.5 text-slate-400">{icon}</span>}
       </div>
     </div>
   );
 }
 
-function ActionIcon({ icon, count }) {
+function ActionButton({ icon, label, theme }) {
   return (
-    <div className="flex items-center gap-1.5 group cursor-pointer">
-      <div className="p-1.5 -ml-1.5 rounded-full transition-colors group-hover:bg-blue-500/10 group-hover:text-blue-500">
-        {icon}
-      </div>
-      {count && <span className="text-[13px] font-medium group-hover:text-blue-500 transition-colors">{count}</span>}
-    </div>
+    <button className={`flex items-center gap-2 px-3 py-3 rounded-md transition-colors text-sm font-semibold flex-1 justify-center ${
+      theme === 'dark' 
+        ? 'text-slate-400 hover:bg-slate-800' 
+        : 'text-slate-500 hover:bg-slate-100'
+    }`}>
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
   );
 }
