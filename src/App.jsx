@@ -2,10 +2,8 @@
 import { 
   Download, 
   Upload, 
-  CheckCircle2, 
   Moon, 
   Sun, 
-  Type, 
   Image as ImageIcon,
   MoreHorizontal,
   MessageCircle,
@@ -20,25 +18,42 @@ import {
 } from 'lucide-react';
 
 // --- Icons / Logos (Inline SVGs for portability) ---
-const XLogo = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-  </svg>
-);
 
-const LinkedInLogo = () => (
-  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-[#0a66c2]">
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 21.227.792 22 1.771 22h20.451C23.2 22 24 21.227 24 20.451V1.729C24 .774 23.2 0 22.225 0z" />
-  </svg>
-);
+// Realistic Verified Badges
+const VerifiedBadge = ({ platform }) => {
+  if (platform === 'x') {
+    return (
+      <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] text-[#1d9bf0] fill-current ml-1">
+        <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .495.083.965.238 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z" />
+      </svg>
+    );
+  }
+  if (platform === 'instagram') {
+    return (
+      <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] text-[#3897f0] fill-current ml-1">
+         <path d="M12.001 2.002c-5.522 0-9.999 4.477-9.999 9.999 0 5.521 4.477 9.999 9.999 9.999 5.521 0 9.999-4.478 9.999-9.999 0-5.522-4.478-9.999-9.999-9.999zm4.354 7.208l-5.152 5.152c-.195.195-.512.195-.707 0l-2.848-2.848c-.195-.195-.195-.512 0-.707.195-.195.512-.195.707 0l2.495 2.494 4.799-4.8c.195-.195.512-.195.707 0 .195.196.195.512-.001.709z"/>
+      </svg>
+    );
+  }
+  if (platform === 'linkedin') {
+    return (
+      <svg viewBox="0 0 24 24" className="w-[16px] h-[16px] text-[#9CA6B1] fill-current ml-1 opacity-80">
+        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.1 14.6l-3.5-3.5 1.4-1.4 2.1 2.1 5-5 1.4 1.4-6.4 6.4z"/>
+      </svg>
+    );
+  }
+  return null;
+};
 
-const InstagramLogo = () => (
-    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-    </svg>
-)
+// --- Helper for Blue Text ---
+const formatContent = (text) => {
+    return text.split(/(\s+)/).map((word, i) => {
+        if (word.match(/^#|^@/)) {
+            return <span key={i} className="text-[#1d9bf0] hover:underline cursor-pointer">{word}</span>
+        }
+        return <span key={i}>{word}</span>
+    });
+};
 
 export default function App() {
   const previewRef = useRef(null);
@@ -55,7 +70,8 @@ export default function App() {
     imageAttachmentUrl: null,
     likes: '1.2K',
     comments: '45',
-    retweets: '128'
+    retweets: '128',
+    timePosted: '2h' // New state for custom time
   });
 
   // Load html-to-image from CDN for standalone execution
@@ -155,19 +171,19 @@ export default function App() {
           <div className="space-y-4">
             <div>
                 <label className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1 block">Display Name</label>
-                <div className="relative">
+                <div className="relative flex items-center gap-2">
                     <input 
                     name="displayName"
                     value={state.displayName}
                     onChange={handleInputChange}
-                    className={`w-full p-2.5 rounded-lg border outline-none focus:ring-2 ${state.darkMode ? 'bg-slate-700 border-slate-600 focus:ring-blue-500' : 'bg-slate-50 border-slate-200 focus:ring-blue-500'}`}
+                    className={`flex-1 p-2.5 rounded-lg border outline-none focus:ring-2 ${state.darkMode ? 'bg-slate-700 border-slate-600 focus:ring-blue-500' : 'bg-slate-50 border-slate-200 focus:ring-blue-500'}`}
                     />
                     <button 
                         onClick={() => handleToggle('verified')}
-                        className={`absolute right-2 top-2.5 ${state.verified ? 'text-blue-500' : 'text-gray-400 opacity-50'}`}
+                        className={`p-2.5 border rounded-lg ${state.verified ? 'bg-blue-500/10 border-blue-500/50 text-blue-500' : 'bg-transparent text-gray-400 opacity-50'}`}
                         title="Toggle Verification"
                     >
-                        <CheckCircle2 size={20} fill={state.verified ? "currentColor" : "none"} />
+                        <VerifiedBadge platform="x" />
                     </button>
                 </div>
             </div>
@@ -195,16 +211,29 @@ export default function App() {
             </div>
           </div>
 
-          {/* Content */}
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1 block">Post Content</label>
-            <textarea 
-              name="content"
-              value={state.content}
-              onChange={handleInputChange}
-              rows={4}
-              className={`w-full p-3 rounded-lg border outline-none focus:ring-2 resize-none ${state.darkMode ? 'bg-slate-700 border-slate-600 focus:ring-blue-500' : 'bg-slate-50 border-slate-200 focus:ring-blue-500'}`}
-            />
+          {/* Time & Content */}
+          <div className="space-y-4">
+            <div>
+               <label className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1 block">Time Posted</label>
+               <input 
+                name="timePosted"
+                value={state.timePosted}
+                onChange={handleInputChange}
+                placeholder="e.g. 2h, 45m, 2 Nov"
+                className={`w-full p-2.5 rounded-lg border outline-none focus:ring-2 ${state.darkMode ? 'bg-slate-700 border-slate-600 focus:ring-blue-500' : 'bg-slate-50 border-slate-200 focus:ring-blue-500'}`}
+               />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1 block">Post Content</label>
+              <textarea 
+                name="content"
+                value={state.content}
+                onChange={handleInputChange}
+                rows={4}
+                className={`w-full p-3 rounded-lg border outline-none focus:ring-2 resize-none ${state.darkMode ? 'bg-slate-700 border-slate-600 focus:ring-blue-500' : 'bg-slate-50 border-slate-200 focus:ring-blue-500'}`}
+              />
+            </div>
           </div>
 
           {/* Stats Inputs */}
@@ -285,18 +314,14 @@ const XPost = ({ state }) => {
                 <div className="flex-1">
                     <div className="flex items-center gap-1">
                         <span className="font-bold text-[15px] hover:underline cursor-pointer">{state.displayName}</span>
-                        {state.verified && <CheckCircle2 size={16} className="text-[#1d9bf0] fill-current" />}
-                        <span className={`${subText} text-[15px]`}>@{state.username} · 1h</span>
+                        {state.verified && <VerifiedBadge platform="x" />}
+                        <span className={`${subText} text-[15px] ml-1`}>@{state.username} · {state.timePosted}</span>
                         <div className="ml-auto text-gray-500"><MoreHorizontal size={18} /></div>
                     </div>
                     
                     {/* Content */}
                     <div className="mt-1 text-[15px] whitespace-pre-wrap leading-relaxed">
-                        {state.content.split(' ').map((word, i) => (
-                            word.startsWith('#') || word.startsWith('@') || word.startsWith('http')
-                             ? <span key={i} className="text-[#1d9bf0]">{word} </span>
-                             : <span key={i}>{word} </span>
-                        ))}
+                        {formatContent(state.content)}
                     </div>
 
                     {/* Image Attachment */}
@@ -348,11 +373,11 @@ const LinkedInPost = ({ state }) => {
                 <div className="flex-1">
                     <div className="flex items-center gap-1">
                         <span className="font-semibold text-sm hover:underline hover:text-blue-500 cursor-pointer">{state.displayName}</span>
-                        {state.verified && <span className={`${secondaryText} text-xs`}>• 1st</span>}
+                        {state.verified && <span className={`${secondaryText} text-xs flex items-center`}>• <VerifiedBadge platform="linkedin"/> 1st</span>}
                     </div>
                     <div className={`${secondaryText} text-xs`}>{state.username} • Software Engineer</div>
                     <div className={`${secondaryText} text-xs flex items-center gap-1`}>
-                        <span>2h • </span>
+                        <span>{state.timePosted} • </span>
                         <svg className={`w-3 h-3 fill-current ${secondaryText}`} viewBox="0 0 16 16"><path d="M8 1a7 7 0 107 7 7 7 0 00-7-7zM3 8a5 5 0 011-3l.55.55A1.5 1.5 0 015 6.62v1.07a.75.75 0 00.22.53l.56.56a.75.75 0 00.53.22H7v.69a.75.75 0 00.22.53l.56.56a.75.75 0 01.22.53V13a5 5 0 01-5-5zm6.24 4.83l2-2.46a.75.75 0 00.09-.8l-.58-1.16A.76.76 0 0010 8H9.5v-.527a.75.75 0 00-.22-.53L8.69 6.35a.75.75 0 01-.22-.53V4h.75a.75.75 0 00.53-.22l.56-.56a.75.75 0 01.53-.22H11a5 5 0 012.3 8.7l-1.39-1.68z"/></svg>
                     </div>
                 </div>
@@ -361,7 +386,7 @@ const LinkedInPost = ({ state }) => {
 
             {/* Content */}
             <div className="px-3 py-2 text-sm whitespace-pre-wrap leading-relaxed">
-                 {state.content}
+                 {formatContent(state.content)}
             </div>
 
             {/* Attachment */}
@@ -420,7 +445,7 @@ const InstagramPost = ({ state }) => {
                         </div>
                      </div>
                      <span className="text-sm font-semibold">{state.username}</span>
-                     {state.verified && <div className="bg-blue-500 rounded-full p-[2px]"><CheckCircle2 size={8} className="text-white"/></div>}
+                     {state.verified && <VerifiedBadge platform="instagram" />}
                 </div>
                 <MoreHorizontal size={20} />
             </div>
@@ -451,10 +476,10 @@ const InstagramPost = ({ state }) => {
                 
                 <div className="text-sm">
                     <span className="font-semibold mr-2">{state.username}</span>
-                    <span className="whitespace-pre-wrap">{state.content}</span>
+                    <span className="whitespace-pre-wrap">{formatContent(state.content)}</span>
                 </div>
                 
-                <div className={`text-xs mt-2 uppercase tracking-wide opacity-50`}>2 HOURS AGO</div>
+                <div className={`text-xs mt-2 uppercase tracking-wide opacity-50`}>{state.timePosted} AGO</div>
             </div>
         </div>
     );
