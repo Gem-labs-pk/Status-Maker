@@ -21,7 +21,8 @@ import {
   Sun,
   Moon,
   Sparkles,
-  Download
+  Download,
+  Check
 } from 'lucide-react';
 
 export default function App() {
@@ -46,8 +47,7 @@ export default function App() {
     likes: '18.5K',
     bookmarks: '1.2K',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&backgroundColor=b6e3f4',
-    badgeColor: '#1D9BF0', // Default Blue
-    isVerified: true,
+    badgeType: 'blue', // 'blue' | 'gold' | 'grey' | 'none'
     postImage: null
   });
 
@@ -113,9 +113,9 @@ export default function App() {
       await new Promise(r => setTimeout(r, 100));
 
       const canvas = await window.html2canvas(tweetCardRef.current, {
-        backgroundColor: theme === 'dark' ? '#000000' : '#ffffff',
+        backgroundColor: theme === 'dark' ? '#15202B' : '#ffffff', // Match new colors
         scale: 3, // High Res
-        useCORS: true, // IMPORTANT for external images
+        useCORS: true, 
         allowTaint: true,
         logging: false,
       });
@@ -123,7 +123,7 @@ export default function App() {
       const image = canvas.toDataURL("image/png");
       const link = document.createElement('a');
       link.href = image;
-      link.download = `status-maker-${Date.now()}.png`;
+      link.download = `status-${stats.handle.replace('@','')}-${Date.now()}.png`;
       link.click();
 
     } catch (err) {
@@ -141,6 +141,7 @@ export default function App() {
     if (!text) return null;
     const parts = text.split(/([\s\n]+)/);
     return parts.map((part, i) => {
+      // Hashtags and Mentions
       if (part.match(/^@[a-zA-Z0-9_]+/) || part.match(/^#[a-zA-Z0-9_]+/)) {
         return <span key={i} className="text-[#1D9BF0]">{part}</span>;
       }
@@ -148,21 +149,30 @@ export default function App() {
     });
   };
 
+  // Badge Color Logic
+  const getBadgeColor = (type) => {
+    switch(type) {
+      case 'gold': return '#FFD700'; // Business
+      case 'grey': return '#829aab'; // Gov/Official
+      default: return '#1D9BF0';     // Standard Blue
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col md:flex-row overflow-hidden">
+    <div className="min-h-screen bg-slate-100 text-slate-800 font-sans flex flex-col md:flex-row overflow-hidden">
       
       {/* --- LEFT PANEL: CONTROL CENTER --- */}
-      <div className="w-full md:w-[440px] border-r border-slate-800 flex flex-col bg-slate-900/90 backdrop-blur-xl relative z-20 h-screen overflow-hidden shadow-2xl">
+      <div className="w-full md:w-[440px] border-r border-slate-200 flex flex-col bg-white relative z-20 h-screen overflow-hidden shadow-xl">
         
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
           <div className="flex items-center gap-2">
-             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+             <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center">
                 <Sparkles size={16} className="text-white" />
              </div>
-             <span className="text-sm font-bold text-slate-200 tracking-wide">Status Maker</span>
+             <span className="text-sm font-bold text-slate-800 tracking-wide">Status Maker</span>
           </div>
-          <button onClick={resetTime} className="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 font-semibold uppercase tracking-wider transition-colors px-3 py-1.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20">
+          <button onClick={resetTime} className="text-[10px] text-slate-500 hover:text-slate-800 flex items-center gap-1.5 font-semibold uppercase tracking-wider transition-colors px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200">
              <RotateCcw size={12} /> Reset
           </button>
         </div>
@@ -173,12 +183,12 @@ export default function App() {
           {/* 1. Appearance (Theme) */}
           <section className="space-y-3">
              <SectionLabel icon={<Sun size={12} />} label="Theme Mode" />
-             <div className="grid grid-cols-2 gap-2 bg-slate-800/50 p-1.5 rounded-xl border border-slate-700/50">
+             <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
                 <ThemeButton 
                   isActive={theme === 'dark'} 
-                  onClick={() =>QHkjTheme('dark')} 
+                  onClick={() => setTheme('dark')} 
                   icon={<Moon size={14} />} 
-                  label="Dark" 
+                  label="Dim (Pro)" 
                 />
                 <ThemeButton 
                   isActive={theme === 'light'} 
@@ -199,13 +209,13 @@ export default function App() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What is happening?!"
-                className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-base text-slate-100 placeholder-slate-500 outline-none resize-none font-medium leading-relaxed min-h-[140px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-base text-slate-800 placeholder-slate-400 outline-none resize-none font-medium leading-relaxed min-h-[140px] focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all"
               />
               <div className="absolute bottom-3 right-3 flex gap-2">
                  {/* Image Controls */}
                  <button 
                   onClick={() => postImageInputRef.current?.click()}
-                  className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-indigo-400 transition-colors"
+                  className="p-2 rounded-lg bg-white shadow-sm border border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-500 transition-colors"
                   title="Attach Media"
                  >
                    <ImageIcon size={16} />
@@ -223,16 +233,16 @@ export default function App() {
             
             {/* Attachment Preview */}
             {stats.postImage && (
-               <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 border border-slate-700">
+               <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-slate-900 overflow-hidden">
+                    <div className="w-10 h-10 rounded bg-slate-200 overflow-hidden">
                       <img src={stats.postImage} alt="Preview" className="w-full h-full object-cover opacity-80" />
                     </div>
-                    <span className="text-xs text-slate-400">Image attached</span>
+                    <span className="text-xs text-slate-500 font-medium">Image attached</span>
                   </div>
                   <button 
                     onClick={clearPostImage}
-                    className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -250,8 +260,8 @@ export default function App() {
                {/* Avatar Upload */}
                <div className="flex flex-col gap-2 items-center">
                  <div className="relative group cursor-pointer w-16 h-16" onClick={() => avatarInputRef.current?.click()}>
-                   <img src={stats.avatar} alt="Profile" className="w-full h-full rounded-full object-cover border-2 border-slate-700 group-hover:border-indigo-500 transition-colors shadow-lg" />
-                   <div className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm">
+                   <img src={stats.avatar} alt="Profile" className="w-full h-full rounded-full object-cover border border-slate-200 group-hover:border-blue-400 transition-colors shadow-sm" />
+                   <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px]">
                      <Upload size={16} className="text-white" />
                    </div>
                  </div>
@@ -271,20 +281,32 @@ export default function App() {
                </div>
             </div>
 
-            {/* Verification Badge */}
-            <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50 space-y-4">
-              <div className="flex justify-between items-center">
-                <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Verification Status</label>
-                <Switch checked={stats.isVerified} onChange={() => updateStat('isVerified', !stats.isVerified)} />
-              </div>
+            {/* Verification Badge Selector */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+              <label className="text-xs text-slate-400 font-bold uppercase tracking-wider">Verification Status</label>
               
-              {stats.isVerified && (
-                <div className="grid grid-cols-3 gap-2">
-                  <BadgeOption color="#1D9BF0" label="Blue" active={stats.badgeColor === '#1D9BF0'} onClick={() => updateStat('badgeColor', '#1D9BF0')} />
-                  <BadgeOption color="#E7B416" label="Gold" active={stats.badgeColor === '#E7B416'} onClick={() => updateStat('badgeColor', '#E7B416')} />
-                  <BadgeOption color="#F91880" label="Pink" active={stats.badgeColor === '#F91880'} onClick={() => updateStat('badgeColor', '#F91880')} />
-                </div>
-              )}
+              <div className="grid grid-cols-4 gap-2">
+                <BadgeSelector 
+                   type="none" 
+                   active={stats.badgeType === 'none'} 
+                   onClick={() => updateStat('badgeType', 'none')} 
+                />
+                <BadgeSelector 
+                   type="blue" 
+                   active={stats.badgeType === 'blue'} 
+                   onClick={() => updateStat('badgeType', 'blue')} 
+                />
+                <BadgeSelector 
+                   type="gold" 
+                   active={stats.badgeType === 'gold'} 
+                   onClick={() => updateStat('badgeType', 'gold')} 
+                />
+                <BadgeSelector 
+                   type="grey" 
+                   active={stats.badgeType === 'grey'} 
+                   onClick={() => updateStat('badgeType', 'grey')} 
+                />
+              </div>
             </div>
           </section>
 
@@ -311,11 +333,11 @@ export default function App() {
         </div>
 
         {/* SAVE Button Sticky Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent z-30">
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 z-30">
           <button 
             onClick={handleSave}
             disabled={isCapturing}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-4 rounded-xl shadow-lg shadow-indigo-900/40 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group"
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 rounded-xl shadow-lg shadow-slate-200 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group"
           >
             {isCapturing ? (
               <span className="animate-pulse">Processing...</span>
@@ -330,21 +352,22 @@ export default function App() {
       </div>
 
       {/* --- RIGHT PANEL: PREVIEW CANVAS --- */}
-      <div className={`flex-1 flex items-center justify-center p-4 md:p-12 relative overflow-hidden transition-colors duration-500 ${theme === 'dark' ? 'bg-[#0f1014]' : 'bg-slate-100'}`}>
+      <div className={`flex-1 flex items-center justify-center p-4 md:p-12 relative overflow-hidden transition-colors duration-500 ${theme === 'dark' ? 'bg-[#000000]' : 'bg-[#F0F2F5]'}`}>
         
-        {/* Modern Background Gradient */}
-        <div className={`absolute inset-0 pointer-events-none opacity-50 ${theme === 'dark' ? 'opacity-30' : 'opacity-60'}`}>
-           <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-indigo-500/20 rounded-full blur-[120px]" />
-           <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-blue-500/20 rounded-full blur-[120px]" />
-        </div>
+        {/* Modern Background Gradient - Very subtle */}
+        {theme === 'dark' && (
+           <div className="absolute inset-0 pointer-events-none opacity-20">
+              <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[#192734] to-transparent" />
+           </div>
+        )}
 
         {/* --- THE POST CARD --- */}
         <div 
           ref={tweetCardRef}
-          className={`w-full max-w-[600px] rounded-2xl p-6 relative z-10 transition-all duration-300 shadow-2xl ${
+          className={`w-full max-w-[600px] rounded-none md:rounded-xl p-4 md:p-5 relative z-10 transition-all duration-300 shadow-xl ${
              theme === 'dark' 
-                ? 'bg-black border border-slate-800 text-white shadow-black/80' 
-                : 'bg-white border border-slate-200 text-black shadow-slate-200/50'
+                ? 'bg-[#15202B] border border-slate-800 text-white shadow-black/50' // Official "Dim" color
+                : 'bg-white border border-slate-100 text-black shadow-slate-200/50'
           }`}
         >
           
@@ -355,21 +378,26 @@ export default function App() {
                 src={stats.avatar} 
                 alt="Profile" 
                 crossOrigin="anonymous" 
-                className="w-11 h-11 rounded-full object-cover"
+                className="w-10 h-10 rounded-full object-cover"
               />
               <div className="flex flex-col justify-center -space-y-0.5">
                 <div className="flex items-center gap-1 group">
-                  <span className={`font-bold text-[15px] ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>
+                  <span className={`font-bold text-[15px] ${theme === 'dark' ? 'text-white' : 'text-[#0F1419]'}`}>
                     {stats.name}
                   </span>
-                  {stats.isVerified && (
-                     <BadgeCheck size={18} color={stats.badgeColor} fill={stats.badgeColor} className="text-white" />
+                  {stats.badgeType !== 'none' && (
+                     <BadgeCheck 
+                        size={18} 
+                        fill={getBadgeColor(stats.badgeType)} 
+                        className="text-white" // This makes the checkmark white
+                        strokeWidth={2.5}
+                     />
                   )}
                 </div>
-                <span className={`text-[15px] ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>{stats.handle}</span>
+                <span className={`text-[15px] ${theme === 'dark' ? 'text-[#8B98A5]' : 'text-[#536471]'}`}>{stats.handle}</span>
               </div>
             </div>
-            <div className={`${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className={`${theme === 'dark' ? 'text-[#8B98A5]' : 'text-[#536471]'}`}>
                <MoreHorizontal size={20} />
             </div>
           </div>
@@ -378,14 +406,14 @@ export default function App() {
           <div className="mt-3 mb-3">
             {/* Text Content */}
             {(content || (!content && !stats.postImage)) && (
-               <p className={`text-[17px] leading-normal whitespace-pre-wrap font-normal break-words ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'} ${!content ? 'opacity-40 italic' : ''}`}>
+               <p className={`text-[17px] leading-[24px] whitespace-pre-wrap font-normal break-words ${theme === 'dark' ? 'text-white' : 'text-[#0F1419]'} ${!content ? 'opacity-40 italic' : ''}`}>
                  {content ? renderRichText(content) : "Type something..."}
                </p>
             )}
             
             {/* Image Attachment */}
             {stats.postImage && (
-              <div className={`rounded-2xl overflow-hidden border mt-3 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+              <div className={`rounded-2xl overflow-hidden border mt-3 ${theme === 'dark' ? 'border-[#38444D]' : 'border-[#CFD9DE]'}`}>
                 <img 
                   src={stats.postImage} 
                   alt="Post" 
@@ -397,24 +425,24 @@ export default function App() {
           </div>
 
           {/* Metadata */}
-          <div className={`py-3 border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
-             <div className={`flex items-center gap-1 text-[15px] ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>
+          <div className={`py-3 border-b ${theme === 'dark' ? 'border-[#38444D]' : 'border-[#EFF3F4]'}`}>
+             <div className={`flex items-center gap-1 text-[15px] ${theme === 'dark' ? 'text-[#8B98A5]' : 'text-[#536471]'}`}>
                 <span>{stats.time}</span>
                 <span>·</span>
                 <span>{stats.date}</span>
                 <span>·</span>
-                <span className={`font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-900'}`}>{stats.views}</span>
+                <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-[#0F1419]'}`}>{stats.views}</span>
                 <span>Views</span>
              </div>
           </div>
 
           {/* Actions */}
-          <div className={`flex justify-between items-center px-2 pt-3 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>
-            <ActionIcon icon={<MessageCircle size={18} />} count="24" color="hover:text-blue-500" />
-            <ActionIcon icon={<Repeat size={18} />} count={stats.reposts}yb color="hover:text-green-500" />
-            <ActionIcon icon={<Heart size={18} />} count={stats.likes} color="hover:text-pink-500" />
-            <ActionIcon icon={<Bookmark size={18} />} count={stats.bookmarks} color="hover:text-blue-500" />
-            <div className="hover:text-blue-500 transition-colors">
+          <div className={`flex justify-between items-center px-2 pt-3 ${theme === 'dark' ? 'text-[#8B98A5]' : 'text-[#536471]'}`}>
+            <ActionIcon icon={<MessageCircle size={18} />} count="24" />
+            <ActionIcon icon={<Repeat size={18} />} count={stats.reposts} />
+            <ActionIcon icon={<Heart size={18} />} count={stats.likes} />
+            <ActionIcon icon={<Bookmark size={18} />} count={stats.bookmarks} />
+            <div className="transition-colors">
               <Share size={18} />
             </div>
           </div>
@@ -429,7 +457,7 @@ export default function App() {
 
 function SectionLabel({ icon, label }) {
   return (
-    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
       {icon}
       <span>{label}</span>
     </div>
@@ -437,7 +465,7 @@ function SectionLabel({ icon, label }) {
 }
 
 function Divider() {
-  return <div className="h-px bg-slate-800 w-full" />;
+  return <div className="h-px bg-slate-100 w-full" />;
 }
 
 function ThemeButton({ isActive, onClick, icon, label }) {
@@ -446,8 +474,8 @@ function ThemeButton({ isActive, onClick, icon, label }) {
       onClick={onClick}
       className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${
         isActive 
-          ? 'bg-slate-700 text-white shadow-md' 
-          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+          ? 'bg-slate-800 text-white shadow-md' 
+          : 'bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50'
       }`}
     >
       {icon} {label}
@@ -455,13 +483,33 @@ function ThemeButton({ isActive, onClick, icon, label }) {
   );
 }
 
-function Switch({ checked, onChange }) {
+function BadgeSelector({ type, active, onClick }) {
+  const getPreviewColor = () => {
+    switch(type) {
+      case 'gold': return '#FFD700';
+      case 'grey': return '#829aab';
+      case 'blue': return '#1D9BF0';
+      default: return '#cbd5e1';
+    }
+  };
+
   return (
     <button 
-      onClick={onChange}
-      className={`w-10 h-5 rounded-full transition-colors relative ${checked ? 'bg-indigo-500' : 'bg-slate-700'}`}
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all ${
+        active 
+          ? 'bg-blue-50/50 border-blue-500/30 ring-1 ring-blue-500/20' 
+          : 'bg-white border-slate-200 hover:border-slate-300'
+      }`}
     >
-      <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-transform shadow-sm ${checked ? 'left-6' : 'left-1'}`} />
+      {type === 'none' ? (
+        <div className="w-5 h-5 rounded-full border-2 border-slate-300" />
+      ) : (
+        <BadgeCheck size={20} fill={getPreviewColor()} className="text-white" />
+      )}
+      <span className={`text-[10px] font-bold capitalize ${active ? 'text-blue-600' : 'text-slate-400'}`}>
+        {type}
+      </span>
     </button>
   );
 }
@@ -475,37 +523,21 @@ function InputGroup({ label, value, onChange, icon }) {
           type="text" 
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={`w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 focus:border-indigo-500 focus:bg-slate-800 outline-none transition-all font-medium ${icon ? 'pl-8' : ''}`}
+          className={`w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:bg-white outline-none transition-all font-medium ${icon ? 'pl-8' : ''}`}
         />
-        {icon && <span className="absolute left-3 top-3 text-slate-500">{icon}</span>}
+        {icon && <span className="absolute left-3 top-3 text-slate-400">{icon}</span>}
       </div>
     </div>
   );
 }
 
-function BadgeOption({ color, label, active, onClick }) {
+function ActionIcon({ icon, count }) {
   return (
-    <button 
-      onClick={onClick}
-      className={`flex items-center justify-center gap-1.5 py-2 rounded-lg border transition-all ${
-        active 
-          ? 'bg-slate-800 border-indigo-500/50 shadow-sm' 
-          : 'bg-transparent border-slate-700 hover:border-slate-600'
-      }`}
-    >
-      <BadgeCheck size={14} color={color} fill={color} className="text-white" />
-      <span className={`text-[10px] font-bold ${active ? 'text-slate-200' : 'text-slate-500'}`}>{label}</span>
-    </button>
-  );
-}
-
-function ActionIcon({ icon, count, color }) {
-  return (
-    <div className={`flex items-center gap-1.5 group cursor-pointer transition-colors ${color}`}>
-      <div className="p-1.5 -ml-1.5 rounded-full transition-colors group-hover:bg-slate-500/10">
+    <div className="flex items-center gap-1.5 group cursor-pointer">
+      <div className="p-1.5 -ml-1.5 rounded-full transition-colors group-hover:bg-blue-500/10 group-hover:text-blue-500">
         {icon}
       </div>
-      {count && <span className="text-[13px] font-medium">{count}</span>}
+      {count && <span className="text-[13px] font-medium group-hover:text-blue-500 transition-colors">{count}</span>}
     </div>
   );
 }
