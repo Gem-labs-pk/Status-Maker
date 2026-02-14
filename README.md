@@ -84,5 +84,6 @@ To run this project locally on your machine:
 
 **Created By:**
 * Saqib Zahid
+* Muzammil Mahmood
 
 *Powered by Gem Labs*
